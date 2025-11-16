@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-function Post({ _id, tittle, author, body, date, onEdit, onDelete }) {
+function Post({ _id, title, author, body, date, onEdit, onDelete }) {
   const pretty = date ? new Date(date).toLocaleString() : "";
   return (
     <article className="post-card">
       <div className="post-header">
-        <h2 className="post-title">{tittle}</h2>
+        <h2 className="post-title">{title}</h2>
         <div className="post-meta">by {author} · {pretty}</div>
       </div>
       <div className="post-body">{body}</div>
       <div className="post-actions post-actions-inside">
-        <button onClick={() => onEdit && onEdit({ _id, tittle, author, body, date })} className="btn small">Edit</button>
+        <button onClick={() => onEdit && onEdit({ _id, title, author, body, date })} className="btn small">Edit</button>
         <button onClick={() => onDelete && onDelete(_id)} className="btn small danger">Delete</button>
       </div>
     </article>
@@ -20,15 +20,17 @@ function Post({ _id, tittle, author, body, date, onEdit, onDelete }) {
 
 function App() {
   const [posts, setPosts] = useState([]);
-  const [form, setForm] = useState({ tittle: "", author: "", body: "" });
+  const [form, setForm] = useState({ title: "", author: "", body: "" });
   const [editingId, setEditingId] = useState(null);
-  const [editingForm, setEditingForm] = useState({ tittle: "", author: "", body: "" });
+  const [editingForm, setEditingForm] = useState({ title: "", author: "", body: "" });
 
   const fetchPosts = async () => {
     try {
       const response = await fetch("/api/posts");
-      const data = await response.json();
-      setPosts(data);
+  const data = await response.json();
+  // normalize any legacy docs that might still have `tittle`
+  const normalized = Array.isArray(data) ? data.map(p => ({ ...p, title: p.title ?? p.tittle })) : [];
+  setPosts(normalized);
     } catch (e) {
       console.error(e);
       alert("Error fetching posts");
@@ -53,7 +55,7 @@ function App() {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error("Create failed");
-      setForm({ tittle: "", author: "", body: "" });
+      setForm({ title: "", author: "", body: "" });
       fetchPosts();
     } catch (err) {
       console.error(err);
@@ -62,14 +64,14 @@ function App() {
   };
 
   const startEdit = (p) => {
-    setEditingId(p._id);
-    setEditingForm({ tittle: p.tittle, author: p.author, body: p.body });
+  setEditingId(p._id);
+  setEditingForm({ title: p.title ?? p.tittle, author: p.author, body: p.body });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const cancelEdit = () => {
-    setEditingId(null);
-    setEditingForm({ tittle: "", author: "", body: "" });
+  setEditingId(null);
+  setEditingForm({ title: "", author: "", body: "" });
   };
 
   const handleEditChange = (e) => {
@@ -118,7 +120,7 @@ function App() {
           <h3>{editingId ? "Edit post" : "Create new post"}</h3>
 
           <div className="form-row">
-            <input name="tittle" value={form.tittle} onChange={handleChange} placeholder="Title" required className="input" />
+            <input name="title" value={form.title} onChange={handleChange} placeholder="Title" required className="input" />
             <input name="author" value={form.author} onChange={handleChange} placeholder="Author" required className="input" />
           </div>
 
@@ -133,7 +135,7 @@ function App() {
         {editingId && (
           <form onSubmit={submitEdit} className="post-form edit-form">
             <h3>Editing</h3>
-            <input name="tittle" placeholder="Title" value={editingForm.tittle} onChange={handleEditChange} required className="input" />
+            <input name="title" placeholder="Title" value={editingForm.title} onChange={handleEditChange} required className="input" />
             <input name="author" placeholder="Author" value={editingForm.author} onChange={handleEditChange} required className="input" />
             <textarea name="body" placeholder="Body" value={editingForm.body} onChange={handleEditChange} rows={3} className="textarea" required />
             <div className="form-actions">
@@ -148,7 +150,7 @@ function App() {
         {posts?.length > 0 ? (
           posts.map((p) => (
             <div key={p._id} className="post-item">
-              <Post _id={p._id} tittle={p.tittle} author={p.author} body={p.body} date={p.date} onEdit={startEdit} onDelete={handleDelete} />
+              <Post _id={p._id} title={p.title ?? p.tittle} author={p.author} body={p.body} date={p.date} onEdit={startEdit} onDelete={handleDelete} />
             </div>
           ))
         ) : (
