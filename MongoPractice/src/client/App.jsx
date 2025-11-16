@@ -116,21 +116,22 @@ function App() {
       </header>
 
       <section className="form-section">
-        <form onSubmit={handleCreate} className="post-form">
-          <h3>{editingId ? "Edit post" : "Create new post"}</h3>
+        {!editingId && (
+          <form onSubmit={handleCreate} className="post-form">
+            <h3>Create new post</h3>
 
-          <div className="form-row">
-            <input name="title" value={form.title} onChange={handleChange} placeholder="Title" required className="input" />
-            <input name="author" value={form.author} onChange={handleChange} placeholder="Author" required className="input" />
-          </div>
+            <div className="form-row">
+              <input name="title" value={form.title} onChange={handleChange} placeholder="Title" required className="input" />
+              <input name="author" value={form.author} onChange={handleChange} placeholder="Author" required className="input" />
+            </div>
 
-          <textarea name="body" value={form.body} onChange={handleChange} placeholder="Body" required rows={4} className="textarea" />
+            <textarea name="body" value={form.body} onChange={handleChange} placeholder="Body" required rows={4} className="textarea" />
 
-          <div className="form-actions">
-            <button type="submit" className="btn primary">Create</button>
-            {editingId && <button type="button" onClick={cancelEdit} className="btn ghost">Cancel</button>}
-          </div>
-        </form>
+            <div className="form-actions">
+              <button type="submit" className="btn primary">Create</button>
+            </div>
+          </form>
+        )}
 
         {editingId && (
           <form onSubmit={submitEdit} className="post-form edit-form">
