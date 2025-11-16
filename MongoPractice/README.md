@@ -39,18 +39,10 @@ npm run dev
 
 - http://localhost:3000
 
-The server will connect to MongoDB using `MONGO_URI` if provided, or default to:
+The server will connect to MongoDB using `MONGO_URI` by default to:
 
 ```
 mongodb://127.0.0.1:27017/university
-```
-
-If you need to point to a different database, set `MONGO_URI` in your shell before starting the server:
-
-```bash
-# macOS zsh example
-export MONGO_URI="mongodb://127.0.0.1:27017/mongopractice"
-npm run dev
 ```
 
 ## Production build
@@ -83,8 +75,6 @@ Base URL during dev: `http://localhost:3000`
 
 ### Data model
 
-Note: The field is now named `title`. For older records created before this change, the API normalizes responses so each post includes a `title` even if the underlying legacy document used `tittle`.
-
 ```js
 Post = {
   title: String,    // required
@@ -116,5 +106,3 @@ Post = {
 - `npm start` – Start the server in production mode (serves `dist/`)
 
 ---
-
-If you want to rename the `tittle` field to `title` later, we can migrate both the backend schema and the frontend forms in a small follow-up.
