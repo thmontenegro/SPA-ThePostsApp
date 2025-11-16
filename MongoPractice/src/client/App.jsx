@@ -1,146 +1,162 @@
 import { useEffect, useState } from "react";
-import reactLogo from "./assets/react.svg";
 import "./App.css";
 
-function Post({ tittle, author, body, date }){
+function Post({ _id, tittle, author, body, date, onEdit, onDelete }) {
   const pretty = date ? new Date(date).toLocaleString() : "";
-  return(
-    <div style={{borderWidth:"1px", borderColor:"lightgray", borderStyle:"solid", borderRadius:"5px", padding: '8px', marginBottom: '8px'}}>
-      <h2>{tittle}</h2>
-      <p style={{marginTop: 0}}>by {author} on {pretty}</p>
-      <div>{body}</div>
-    </div>
-  )
+  return (
+    <article className="post-card">
+      <div className="post-header">
+        <h2 className="post-title">{tittle}</h2>
+        <div className="post-meta">by {author} · {pretty}</div>
+      </div>
+      <div className="post-body">{body}</div>
+      <div className="post-actions post-actions-inside">
+        <button onClick={() => onEdit && onEdit({ _id, tittle, author, body, date })} className="btn small">Edit</button>
+        <button onClick={() => onDelete && onDelete(_id)} className="btn small danger">Delete</button>
+      </div>
+    </article>
+  );
 }
 
 function App() {
-  const [post, setPost] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [form, setForm] = useState({ tittle: "", author: "", body: "" });
   const [editingId, setEditingId] = useState(null);
   const [editingForm, setEditingForm] = useState({ tittle: "", author: "", body: "" });
 
   const fetchPosts = async () => {
-    try{
+    try {
       const response = await fetch("/api/posts");
       const data = await response.json();
-      setPost(data);
-    }catch(e){
+      setPosts(data);
+    } catch (e) {
       console.error(e);
       alert("Error fetching posts");
-  }
-}
+    }
+  };
 
-useEffect(() => {
-  fetchPosts();
-}, [])
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
-  }
+    setForm((f) => ({ ...f, [name]: value }));
+  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    try{
-      const res = await fetch('/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error('Create failed');
+      if (!res.ok) throw new Error("Create failed");
       setForm({ tittle: "", author: "", body: "" });
       fetchPosts();
-    }catch(err){
+    } catch (err) {
       console.error(err);
-      alert('Failed to create post');
+      alert("Failed to create post");
     }
-  }
+  };
 
   const startEdit = (p) => {
     setEditingId(p._id);
     setEditingForm({ tittle: p.tittle, author: p.author, body: p.body });
-  }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditingForm({ tittle: "", author: "", body: "" });
-  }
+  };
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setEditingForm(f => ({ ...f, [name]: value }));
-  }
+    setEditingForm((f) => ({ ...f, [name]: value }));
+  };
 
   const submitEdit = async (e) => {
     e.preventDefault();
-    try{
+    try {
       const res = await fetch(`/api/posts/${editingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingForm)
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingForm),
       });
-      if (!res.ok) throw new Error('Update failed');
+      if (!res.ok) throw new Error("Update failed");
       cancelEdit();
       fetchPosts();
-    }catch(err){
+    } catch (err) {
       console.error(err);
-      alert('Failed to update post');
+      alert("Failed to update post");
     }
-  }
+  };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this post?')) return;
-    try{
-      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+    if (!window.confirm("Delete this post?")) return;
+    try {
+      const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
       fetchPosts();
-    }catch(err){
+    } catch (err) {
       console.error(err);
-      alert('Failed to delete post');
+      alert("Failed to delete post");
     }
-  }
+  };
 
   return (
-    <div style={{padding: '12px'}}>
-      <h1>Posts</h1>
+    <div className="app-container">
+      <header className="app-header">
+        <h1>Posts</h1>
+        <p className="lead">Create, edit and manage posts</p>
+      </header>
 
-      <form onSubmit={handleCreate} style={{marginBottom: '16px'}}>
-        <h3>Create new post</h3>
-        <input name="tittle" value={form.tittle} onChange={handleChange} placeholder="Title" required />
-        <input name="author" value={form.author} onChange={handleChange} placeholder="Author" required />
-        <br />
-        <textarea name="body" value={form.body} onChange={handleChange} placeholder="Body" required rows={4} cols={40} />
-        <br />
-        <button type="submit">Create</button>
-      </form>
+      <section className="form-section">
+        <form onSubmit={handleCreate} className="post-form">
+          <h3>{editingId ? "Edit post" : "Create new post"}</h3>
 
-      {post?.length > 0 ? (
-        post.map(p => (
-          <div key={p._id}>
-            {editingId === p._id ? (
-              <form onSubmit={submitEdit} style={{marginBottom: '8px'}}>
-                <input name="tittle" value={editingForm.tittle} onChange={handleEditChange} required />
-                <input name="author" value={editingForm.author} onChange={handleEditChange} required />
-                <br />
-                <textarea name="body" value={editingForm.body} onChange={handleEditChange} rows={3} cols={40} required />
-                <br />
-                <button type="submit">Save</button>
-                <button type="button" onClick={cancelEdit}>Cancel</button>
-              </form>
-            ) : (
-              <>
-                <Post tittle={p.tittle} author={p.author} body={p.body} date={p.date} />
-                <button onClick={() => startEdit(p)}>Edit</button>
-                <button onClick={() => handleDelete(p._id)}>Delete</button>
-              </>
-            )}
+          <div className="form-row">
+            <input name="tittle" value={form.tittle} onChange={handleChange} placeholder="Title" required className="input" />
+            <input name="author" value={form.author} onChange={handleChange} placeholder="Author" required className="input" />
           </div>
-        ))
-      ) : (
-        <p>No post available.</p>
-      )}
+
+          <textarea name="body" value={form.body} onChange={handleChange} placeholder="Body" required rows={4} className="textarea" />
+
+          <div className="form-actions">
+            <button type="submit" className="btn primary">Create</button>
+            {editingId && <button type="button" onClick={cancelEdit} className="btn ghost">Cancel</button>}
+          </div>
+        </form>
+
+        {editingId && (
+          <form onSubmit={submitEdit} className="post-form edit-form">
+            <h3>Editing</h3>
+            <input name="tittle" placeholder="Title" value={editingForm.tittle} onChange={handleEditChange} required className="input" />
+            <input name="author" placeholder="Author" value={editingForm.author} onChange={handleEditChange} required className="input" />
+            <textarea name="body" placeholder="Body" value={editingForm.body} onChange={handleEditChange} rows={3} className="textarea" required />
+            <div className="form-actions">
+              <button type="submit" className="btn primary">Save</button>
+              <button type="button" onClick={cancelEdit} className="btn ghost">Cancel</button>
+            </div>
+          </form>
+        )}
+      </section>
+
+      <section className="posts-section">
+        {posts?.length > 0 ? (
+          posts.map((p) => (
+            <div key={p._id} className="post-item">
+              <Post _id={p._id} tittle={p.tittle} author={p.author} body={p.body} date={p.date} onEdit={startEdit} onDelete={handleDelete} />
+            </div>
+          ))
+        ) : (
+          <p className="no-posts">No posts available.</p>
+        )}
+      </section>
     </div>
-  )
+  );
 }
 
 export default App;
